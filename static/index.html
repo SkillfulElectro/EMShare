@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploader</title>
+    <style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0; /* light gray background */
+    }
+
+    header {
+    background-color: #333; /* dark gray background */
+    color: #fff; /* white text */
+    padding: 1em;
+    text-align: right;
+    }
+
+    #theme-button {
+    background-color: #333;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5em 1em;
+    }
+
+    #theme-button:hover {
+    background-color: #444;
+    }
+
+    main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2em;
+    }
+
+    #upload-button {
+    background-color: #333;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5em 1em;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    }
+
+    #upload-button span {
+    font-size: 16px;
+    font-weight: bold;
+    }
+
+    #upload-button:hover {
+    background-color: #444;
+    }
+
+    #status-box {
+    margin-top: 1em;
+    padding: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    text-align: center;
+    }
+
+    .status {
+    font-size: 14px;
+    color: #333;
+    }
+
+    .status.file-selected {
+    color: green;
+    }
+
+    .status.file-failed {
+    color: red;
+    }
+
+    .status.uploading {
+    color: orange;
+    }
+
+    .status.uploaded {
+    color: blue;
+    }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button id="theme-button">Switch Theme</button>
+    </header>
+    <main>
+      <button id="upload-button">
+        <span>Select File</span>
+        <input type="file" id="file-input" style="display: none;">
+      </button>
+      <div id="status-box">
+        <div class="status" id="status-text">File not selected</div>
+      </div>
+    </main>
+    <script>
+    const themeButton = document.getElementById('theme-button');
+    const uploadButton = document.getElementById('upload-button');
+    const fileInput = document.getElementById('file-input');
+    const statusText = document.getElementById('status-text');
+    const body = document.body;
+    let isNightMode = false;
+
+    themeButton.addEventListener('click', () => {
+      isNightMode = !isNightMode;
+      updateTheme();
+    });
+
+    uploadButton.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        updateStatus('file-selected');
+        console.log(`File selected: ${file.name}`);
+        uploadFile(file);
+      } else {
+        updateStatus('file-not-selected');
+      }
+    });
+
+    function updateStatus(status) {
+      switch (status) {
+        case 'file-not-selected':
+          statusText.textContent = 'File not selected';
+          statusText.className = 'status';
+          break;
+        case 'file-selected':
+          statusText.textContent = 'File selected';
+          statusText.className = 'status file-selected';
+          break;
+        case 'file-failed':
+          statusText.textContent = 'Failed to connect';
+          statusText.className = 'status file-failed';
+          break;
+        case 'uploading':
+          statusText.textContent = 'Uploading';
+          statusText.className = 'status uploading';
+          break;
+        case 'uploaded':
+          statusText.textContent = 'Uploaded';
+          statusText.className = 'status uploaded';
+          break;
+        default:
+          statusText.textContent = 'Unknown status';
+          statusText.className = 'status';
+          break;
+      }
+    }
+
+    function uploadFile(file) {
+      updateStatus('uploading');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/upload', { // Change '/upload' to your actual endpoint
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.text(); // Changed to .text() to handle text responses
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(data => {
+          // Check the response text for specific status messages if needed
+          console.log('Upload successful:', data);
+          updateStatus('uploaded');
+        })
+        .catch(error => {
+          console.error('Upload error:', error);
+          updateStatus('file-failed');
+        });
+    }
+
+    function updateTheme() {
+      if (isNightMode) {
+        body.style.background = 'black';
+        body.style.color = 'white';
+        themeButton.style.background = 'white';
+        themeButton.style.color = 'black';
+        uploadButton.style.background = 'white';
+        uploadButton.style.color = 'black';
+        statusText.style.color = 'white';
+        statusText.parentElement.style.backgroundColor = 'black';
+        statusText.parentElement.style.borderColor = 'white';
+      } else {
+        body.style.background = 'white';
+        body.style.color = 'black';
+        themeButton.style.background = 'black';
+        themeButton.style.color = 'white';
+        uploadButton.style.background = 'black';
+        uploadButton.style.color = 'white';
+        statusText.style.color = 'black';
+        statusText.parentElement.style.backgroundColor = 'white';
+        statusText.parentElement.style.borderColor = '#ddd';
+      }
+    }
+    </script>
+
+  </body>
+</html>
+
